@@ -5,6 +5,9 @@ const c = canvas.getContext("2d");
 canvas.width = 1024
 canvas.height = 576
 
+let globalScrollX = 400
+let globalScrollY = 0
+
 const scaledCanvas = {
     width: canvas.width / 4,
     height: canvas.height / 4,
@@ -27,6 +30,8 @@ class Sprite {
 
     update() {
         this.draw()
+        this.position.x = this.position.x - globalScrollX 
+        this.position.y = this.position.y - globalScrollY 
     }
 }
 
@@ -38,17 +43,22 @@ class Player {
         this.xAcceleration = 0
     }
     draw() {
-        c.fillStyle = 'red'
+        // COLLISION CHECK
+        if ( 1 === 2) c.fillStyle = 'red'
+        else c.fillStyle = 'yellow'
         c.fillRect(this.position.x, this.position.y, 100, this.height)
     }
-
+    
     update() {
-    this.draw()
-    this.position.y += this.position.yAcceleration
-    this.position.x += this.xAcceleration
-    if (this.position.y + this.height + this.position.yAcceleration < canvas.height) {
-        this.position.yAcceleration += gravity 
-        console.log(this.position.yAcceleration)
+        this.draw()
+        globalScrollY = this.position.y - 200
+        globalScrollX = this.position.x - 350
+        this.position.y += -globalScrollY + this.position.yAcceleration
+        this.position.x += this.xAcceleration - globalScrollX
+
+    // CONTROLL FOR JUMPS
+    if (this.position.y + this.height + this.position.yAcceleration < (scaledCanvas.height * 4) ) {
+        this.position.yAcceleration += gravity
     } else {
         this.position.yAcceleration = 0
         this.jumpAmount = 2
@@ -57,8 +67,8 @@ class Player {
 }
 // SPAWNS THE PLAYER
 const player = new Player({
-    x:100,
-    y:100,
+    x:400,
+    y:-100,
     yAcceleration: 1,
 })
 // KEYS FOR THE GAME
@@ -70,6 +80,9 @@ const keys = {
         pressed: false
     },
     w: {
+        pressed: false
+    },
+    i: {
         pressed: false
     },
 }
@@ -84,17 +97,28 @@ const background = new Sprite({
     imageSrc: './img/Background.png'
 })
 
+const platformCollisions = new Sprite({
+    position: {
+        // x: background.x,
+        // y: background.y,
+        x: 0,
+        y: 0,
+    },
+    imageSrc: './img/platformCollisions.png'
+})
+
 
 //GLOBALLY ANIMATES AND FORWARDS THE GAME
 function animate() {
     window.requestAnimationFrame(animate)
     c.fillStyle = 'white'
     c.fillRect(0,0,canvas.width,canvas.height)
-
+    
     c.save()
     c.scale(4, 4)
     c.translate(0, -background.image.height + scaledCanvas.height)
     background.update()
+    platformCollisions.update()
     c.restore()
     
     player.update()
@@ -103,6 +127,11 @@ function animate() {
     player.xAcceleration = 0
     if(keys.d.pressed) player.xAcceleration = 5
     if(keys.a.pressed) player.xAcceleration = -5
+    if(keys.i.pressed) 
+        {
+        console.log(globalScrollY) 
+        console.log(scaledCanvas.height / 2)
+        }
 }
 
 animate();
@@ -114,6 +143,9 @@ window.addEventListener('keydown', (event) => {
                 break;
         case 'a':
                 keys.a.pressed = true
+                break;
+        case 'i':
+                keys.i.pressed = true
                 break;
         case 'w':
             if (player.jumpAmount > 0) {
@@ -132,6 +164,9 @@ window.addEventListener('keyup', (event) => {
             break;
         case 'a':
             keys.a.pressed = false
+            break;
+        case 'i':
+            keys.i.pressed = false
             break;
         case 'w':
             keys.w.pressed = false
